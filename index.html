@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Controle de Estoque & Cadastro de Produtos</title>
+  <title>Controle de Estoque & Conferência</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 md:p-6 text-gray-800">
@@ -13,28 +13,26 @@
     <div class="bg-blue-900 text-white p-5 rounded-xl shadow-md flex justify-between items-center">
       <div>
         <h1 class="text-2xl font-bold">Gestão & Conferência de Estoque</h1>
-        <p class="text-sm text-blue-200">Integração GitHub Pages + Google Sheets</p>
+        <p class="text-sm text-blue-200">GitHub Pages + Google Sheets</p>
       </div>
       <button onclick="carregarDados()" class="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded-lg text-sm font-semibold transition">
         🔄 Atualizar Dados
       </button>
     </div>
 
-    <!-- Indicador de Status/Alertas -->
+    <!-- Status / Alertas -->
     <div id="statusAlert" class="hidden p-4 rounded-xl font-medium text-sm"></div>
 
-    <!-- 1. SEÇÃO DE CADASTRO DE PRODUTOS -->
+    <!-- 1. CADASTRO DE PRODUTOS -->
     <div class="bg-white p-6 rounded-xl shadow-md space-y-4">
-      <h2 class="text-lg font-bold text-gray-700 border-b pb-2 flex items-center gap-2">
-        📦 Cadastrar / Editar Produto
-      </h2>
+      <h2 class="text-lg font-bold text-gray-700 border-b pb-2">📦 Cadastrar / Editar Produto</h2>
 
       <form id="formProduto" onsubmit="salvarProduto(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <input type="hidden" id="prodId">
         
         <div class="md:col-span-2">
           <label class="block text-xs font-bold text-gray-600 mb-1">NOME DO PRODUTO</label>
-          <input type="text" id="prodNome" required placeholder="Ex: Melancia Baby / Caixa Papelão" class="w-full border rounded-lg p-2.5 bg-gray-50 focus:ring-2 focus:ring-blue-500">
+          <input type="text" id="prodNome" required placeholder="Ex: Banana Nanica MD" class="w-full border rounded-lg p-2.5 bg-gray-50 focus:ring-2 focus:ring-blue-500">
         </div>
 
         <div>
@@ -44,7 +42,7 @@
 
         <div class="flex items-end gap-2">
           <button type="submit" id="btnSalvarProd" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition">
-            ➕ Cadastrar Produto
+            ➕ Cadastrar
           </button>
           <button type="button" id="btnCancelarEdicaoProd" onclick="limparFormProduto()" class="hidden bg-gray-400 hover:bg-gray-500 text-white font-bold py-2.5 px-3 rounded-lg transition">
             ❌
@@ -53,11 +51,9 @@
       </form>
     </div>
 
-    <!-- 2. SEÇÃO DE LANÇAMENTO DE MOVIMENTAÇÕES -->
+    <!-- 2. LANÇAMENTO DE MOVIMENTAÇÕES -->
     <div class="bg-white p-6 rounded-xl shadow-md space-y-4">
-      <h2 class="text-lg font-bold text-gray-700 border-b pb-2 flex items-center gap-2">
-        📝 Novo Lançamento / Conferência
-      </h2>
+      <h2 class="text-lg font-bold text-gray-700 border-b pb-2">📝 Novo Lançamento / Conferência</h2>
       
       <form id="formLancamento" onsubmit="salvarLancamento(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
@@ -95,7 +91,7 @@
 
         <div>
           <label class="block text-xs font-bold text-gray-600 mb-1">OBSERVAÇÃO (OPCIONAL)</label>
-          <input type="text" id="inputObservacao" placeholder="Ex: NFE 1234" class="w-full border rounded-lg p-2.5 bg-gray-50">
+          <input type="text" id="inputObservacao" placeholder="Ex: Lote 01" class="w-full border rounded-lg p-2.5 bg-gray-50">
         </div>
 
         <div class="md:col-span-4 flex justify-end">
@@ -106,7 +102,7 @@
       </form>
     </div>
 
-    <!-- 3. TABELA DE PRODUTOS E CONFERÊNCIA -->
+    <!-- 3. POSIÇÃO GERAL DO ESTOQUE -->
     <div class="bg-white p-6 rounded-xl shadow-md space-y-4">
       <h2 class="text-lg font-bold text-gray-700 border-b pb-2">📊 Posição Geral do Estoque</h2>
       
@@ -115,14 +111,14 @@
           <thead>
             <tr class="bg-gray-100 text-gray-600 text-xs uppercase font-bold border-b">
               <th class="p-3">Produto</th>
-              <th class="p-3 text-center">Estoque Lógico</th>
               <th class="p-3 text-center">Última Conferência</th>
-              <th class="p-3 text-center">Status (Diferença)</th>
+              <th class="p-3 text-center">Estoque Atual (Real/Lógico)</th>
+              <th class="p-3 text-center">Status da Última Conferência</th>
               <th class="p-3 text-center">Ações Produto</th>
             </tr>
           </thead>
           <tbody id="tabelaEstoque" class="divide-y text-sm">
-            <tr><td colspan="5" class="p-4 text-center text-gray-500">Carregando dados da planilha...</td></tr>
+            <tr><td colspan="5" class="p-4 text-center text-gray-500">Carregando dados...</td></tr>
           </tbody>
         </table>
       </div>
@@ -130,7 +126,7 @@
 
     <!-- 4. HISTÓRICO DE LANÇAMENTOS -->
     <div class="bg-white p-6 rounded-xl shadow-md space-y-4">
-      <h2 class="text-lg font-bold text-gray-700 border-b pb-2">📋 Histórico de Lançamentos do Dia</h2>
+      <h2 class="text-lg font-bold text-gray-700 border-b pb-2">📋 Histórico de Lançamentos</h2>
       
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
@@ -145,7 +141,7 @@
             </tr>
           </thead>
           <tbody id="tabelaHistorico" class="divide-y text-sm">
-            <tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum lançamento efetuado ainda.</td></tr>
+            <tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum lançamento efetuado.</td></tr>
           </tbody>
         </table>
       </div>
@@ -154,8 +150,8 @@
   </div>
 
   <script>
-    // Cole aqui a URL gerada na Implantação do seu Google Apps Script
-    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbwZ_zEzUXyMJ2Ic_6Kct98kkLNqwxH0-zh5-DSmuxgyt-PhJl07PKvDzS78V10CV5w-TA/exec";
+    // Cole aqui o link da sua Web App do Google Apps Script
+    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxKGaFIgD6GfyyxU2Y8HXF4YyZck_xTvbZjNBymOrEAE1Rx0t9WvwgbnyzfzzhwNJDQJw/exec";
 
     let produtosGlobais = [];
     let historicoGlobal = [];
@@ -173,7 +169,7 @@
           renderizarSelectProdutos();
           renderizarEstoque();
           renderizarHistorico();
-          exibirStatus("Dados atualizados!", "green");
+          exibirStatus("Dados atualizados com sucesso!", "green");
         } else {
           exibirStatus("Erro ao carregar os dados.", "red");
         }
@@ -181,8 +177,6 @@
         exibirStatus("Erro de conexão. Verifique o link do Apps Script.", "red");
       }
     }
-
-    // --- PRODUTOS ---
 
     async function salvarProduto(e) {
       e.preventDefault();
@@ -197,12 +191,7 @@
       try {
         await fetch(URL_SCRIPT, {
           method: "POST",
-          body: JSON.stringify({
-            acao: "salvarProduto",
-            id,
-            nome,
-            estoqueInicial
-          })
+          body: JSON.stringify({ acao: "salvarProduto", id, nome, estoqueInicial })
         });
 
         limparFormProduto();
@@ -227,7 +216,7 @@
     function limparFormProduto() {
       document.getElementById("formProduto").reset();
       document.getElementById("prodId").value = "";
-      document.getElementById("btnSalvarProd").innerText = "➕ Cadastrar Produto";
+      document.getElementById("btnSalvarProd").innerText = "➕ Cadastrar";
       document.getElementById("btnCancelarEdicaoProd").classList.add("hidden");
     }
 
@@ -261,56 +250,59 @@
       tbody.innerHTML = "";
 
       if (produtosGlobais.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum produto cadastrado ainda. Use o formulário acima.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum produto cadastrado.</td></tr>`;
         return;
       }
 
       produtosGlobais.forEach(p => {
-        const movs = historicoGlobal.filter(h => String(h.idProduto) === String(p.id));
+        const movs = historicoGlobal
+          .filter(h => String(h.idProduto) === String(p.id))
+          .sort((a, b) => new Date(a.data) - new Date(b.data));
 
-        let estoqueLogico = p.estoqueInicial || 0;
-        let ultimaConf = null;
+        let estoqueAtual = p.estoqueInicial || 0;
+        let ultimaConfValor = null;
+        let diferencaUltimaConf = null;
 
         movs.forEach(m => {
           const t = m.tipo;
           if (["COMPRA", "ENTRADA", "MERCADORIA CD/BOX", "DEVOLUÇÃO"].includes(t)) {
-            estoqueLogico += Number(m.quantidade);
+            estoqueAtual += Number(m.quantidade);
           } else if (["VENDAS", "SAÍDA", "QUEBRA/PERCA", "DOAÇÃO"].includes(t)) {
-            estoqueLogico -= Number(m.quantidade);
+            estoqueAtual -= Number(m.quantidade);
           } else if (t === "CONFERENCIA") {
-            ultimaConf = Number(m.quantidade);
+            const fisico = Number(m.quantidade);
+            diferencaUltimaConf = fisico - estoqueAtual;
+            estoqueAtual = fisico;
+            ultimaConfValor = fisico;
           }
         });
 
-        let statusBadge = '<span class="text-gray-400 text-xs">Sem Conferência</span>';
+        let statusBadge = '<span class="text-gray-400 text-xs font-semibold">SEM CONFERÊNCIA</span>';
 
-        if (ultimaConf !== null) {
-          const dif = ultimaConf - estoqueLogico;
-          if (dif === 0) {
+        if (diferencaUltimaConf !== null) {
+          if (diferencaUltimaConf === 0) {
             statusBadge = `<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold">BATENDO</span>`;
-          } else if (dif < 0) {
-            statusBadge = `<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold">FALTANDO (${Math.abs(dif)})</span>`;
+          } else if (diferencaUltimaConf < 0) {
+            statusBadge = `<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold">FALTANDO (${Math.abs(diferencaUltimaConf)})</span>`;
           } else {
-            statusBadge = `<span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold">SOBRANDO (+${dif})</span>`;
+            statusBadge = `<span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold">SOBRANDO (+${diferencaUltimaConf})</span>`;
           }
         }
 
         tbody.innerHTML += `
-          <tr class="hover:bg-gray-50">
-            <td class="p-3 font-semibold">${p.nome}</td>
-            <td class="p-3 text-center font-bold text-gray-700">${estoqueLogico}</td>
-            <td class="p-3 text-center font-bold text-blue-600">${ultimaConf !== null ? ultimaConf : "-"}</td>
+          <tr class="hover:bg-gray-50 border-b">
+            <td class="p-3 font-semibold text-gray-800">${p.nome}</td>
+            <td class="p-3 text-center font-bold text-blue-600">${ultimaConfValor !== null ? ultimaConfValor : "-"}</td>
+            <td class="p-3 text-center font-bold text-gray-800 text-base">${estoqueAtual}</td>
             <td class="p-3 text-center">${statusBadge}</td>
             <td class="p-3 text-center space-x-1">
               <button onclick="editarProduto('${p.id}')" class="text-blue-600 hover:text-blue-800 text-xs font-bold border border-blue-200 px-2 py-1 rounded hover:bg-blue-50">✏️ Editar</button>
-              <button onclick="excluirProduto('${p.id}')" class="text-red-600 hover:text-red-800 text-xs font-bold border border-red-200 px-2 py-1 rounded hover:bg-red-50">🗑️ Excluir</button>
+              <button onclick="excluirProduto('${p.id}')" class="text-red-600 hover:text-red-800 text-xs font-bold border border-red-200 px-2 py-1 rounded hover:bg-blue-50">🗑️ Excluir</button>
             </td>
           </tr>
         `;
       });
     }
-
-    // --- LANÇAMENTOS / HISTÓRICO ---
 
     async function salvarLancamento(e) {
       e.preventDefault();
@@ -322,7 +314,7 @@
 
       if (!idProduto || !quantidade) return;
 
-      exibirStatus("Enviando lançamento...", "blue");
+      exibirStatus("Registrando lançamento...", "blue");
 
       try {
         await fetch(URL_SCRIPT, {
@@ -349,7 +341,7 @@
       tbody.innerHTML = "";
 
       if (historicoGlobal.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum lançamento efetuado ainda.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum lançamento efetuado.</td></tr>`;
         return;
       }
 
@@ -402,7 +394,6 @@
       setTimeout(() => el.classList.add("hidden"), 3000);
     }
 
-    // Inicialização
     carregarDados();
   </script>
 </body>
