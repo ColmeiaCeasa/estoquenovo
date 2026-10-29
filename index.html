@@ -5,26 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Controle de Estoque & Conferência</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      body { background: white !important; padding: 0 !important; }
+      no-print, form, button, nav, header button { display: none !important; }
+      .shadow-md { box-shadow: none !important; border: 1px solid #ddd; }
+    }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 md:p-6 text-gray-800">
   <div class="max-w-6xl mx-auto space-y-6">
 
     <!-- Header -->
-    <div class="bg-blue-900 text-white p-5 rounded-xl shadow-md flex justify-between items-center">
+    <div class="bg-blue-900 text-white p-5 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-center gap-4">
       <div>
         <h1 class="text-2xl font-bold">Gestão & Conferência de Estoque</h1>
         <p class="text-sm text-blue-200">GitHub Pages + Google Sheets</p>
       </div>
-      <button onclick="carregarDados()" class="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded-lg text-sm font-semibold transition">
-        🔄 Atualizar Dados
-      </button>
+      <div class="no-print flex flex-wrap gap-2">
+        <button onclick="copiarResumoWhatsApp()" class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1">
+          📱 Copiar p/ WhatsApp
+        </button>
+        <button onclick="window.print()" class="bg-gray-700 hover:bg-gray-800 px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1">
+          🖨️ Imprimir Relatório
+        </button>
+        <button onclick="carregarDados()" class="bg-blue-700 hover:bg-blue-600 px-3 py-2 rounded-lg text-xs font-bold transition">
+          🔄 Atualizar
+        </button>
+      </div>
     </div>
 
     <!-- Status / Alertas -->
     <div id="statusAlert" class="hidden p-4 rounded-xl font-medium text-sm"></div>
 
     <!-- 1. CADASTRO DE PRODUTOS -->
-    <div class="bg-white p-6 rounded-xl shadow-md space-y-4">
+    <div class="no-print bg-white p-6 rounded-xl shadow-md space-y-4">
       <h2 class="text-lg font-bold text-gray-700 border-b pb-2">📦 Cadastrar / Editar Produto</h2>
 
       <form id="formProduto" onsubmit="salvarProduto(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -52,10 +67,17 @@
     </div>
 
     <!-- 2. LANÇAMENTO DE MOVIMENTAÇÕES -->
-    <div class="bg-white p-6 rounded-xl shadow-md space-y-4">
-      <h2 class="text-lg font-bold text-gray-700 border-b pb-2">📝 Novo Lançamento / Conferência</h2>
+    <div class="no-print bg-white p-6 rounded-xl shadow-md space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h2 id="tituloFormLancamento" class="text-lg font-bold text-gray-700">📝 Novo Lançamento / Conferência</h2>
+        <button type="button" id="btnCancelarEdicaoLanc" onclick="limparFormLancamento()" class="hidden text-xs bg-gray-400 hover:bg-gray-500 text-white font-bold py-1 px-3 rounded transition">
+          ❌ Cancelar Edição
+        </button>
+      </div>
       
       <form id="formLancamento" onsubmit="salvarLancamento(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <input type="hidden" id="lancId">
+
         <div>
           <label class="block text-xs font-bold text-gray-600 mb-1">SELECIONE O PRODUTO</label>
           <select id="selectProduto" required class="w-full border rounded-lg p-2.5 bg-gray-50 focus:ring-2 focus:ring-blue-500">
@@ -95,7 +117,7 @@
         </div>
 
         <div class="md:col-span-4 flex justify-end">
-          <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-6 rounded-lg transition">
+          <button type="submit" id="btnSalvarLanc" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-6 rounded-lg transition">
             💾 Registrar Lançamento
           </button>
         </div>
@@ -104,7 +126,10 @@
 
     <!-- 3. POSIÇÃO GERAL DO ESTOQUE -->
     <div class="bg-white p-6 rounded-xl shadow-md space-y-4">
-      <h2 class="text-lg font-bold text-gray-700 border-b pb-2">📊 Posição Geral do Estoque</h2>
+      <div class="flex justify-between items-center border-b pb-2">
+        <h2 class="text-lg font-bold text-gray-700">📊 Relatório / Posição Geral do Estoque</h2>
+        <span class="text-xs text-gray-500 font-semibold" id="dataRelatorio"></span>
+      </div>
       
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
@@ -112,9 +137,9 @@
             <tr class="bg-gray-100 text-gray-600 text-xs uppercase font-bold border-b">
               <th class="p-3">Produto</th>
               <th class="p-3 text-center">Última Conferência</th>
-              <th class="p-3 text-center">Estoque Atual (Real/Lógico)</th>
-              <th class="p-3 text-center">Status da Última Conferência</th>
-              <th class="p-3 text-center">Ações Produto</th>
+              <th class="p-3 text-center">Estoque Atual (Real)</th>
+              <th class="p-3 text-center">Status da Conferência</th>
+              <th class="no-print p-3 text-center">Ações Produto</th>
             </tr>
           </thead>
           <tbody id="tabelaEstoque" class="divide-y text-sm">
@@ -137,7 +162,7 @@
               <th class="p-3">Tipo</th>
               <th class="p-3 text-right">Qtd</th>
               <th class="p-3">Obs.</th>
-              <th class="p-3 text-center">Ação</th>
+              <th class="no-print p-3 text-center">Ações</th>
             </tr>
           </thead>
           <tbody id="tabelaHistorico" class="divide-y text-sm">
@@ -151,10 +176,12 @@
 
   <script>
     // Cole aqui o link da sua Web App do Google Apps Script
-    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxKGaFIgD6GfyyxU2Y8HXF4YyZck_xTvbZjNBymOrEAE1Rx0t9WvwgbnyzfzzhwNJDQJw/exec";
+    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbwfMmoQAYNNo08xWUOlmZMJgg8JZoYCIhGRxm0wE1kGsSrsbDxrVCkRxjzZNCN7T5ytZw/exec";
 
     let produtosGlobais = [];
     let historicoGlobal = [];
+
+    document.getElementById("dataRelatorio").innerText = "Data: " + new Date().toLocaleDateString('pt-BR');
 
     async function carregarDados() {
       exibirStatus("Sincronizando com a planilha...", "blue");
@@ -177,6 +204,8 @@
         exibirStatus("Erro de conexão. Verifique o link do Apps Script.", "red");
       }
     }
+
+    // --- PRODUTOS ---
 
     async function salvarProduto(e) {
       e.preventDefault();
@@ -211,6 +240,7 @@
 
       document.getElementById("btnSalvarProd").innerText = "💾 Salvar Alteração";
       document.getElementById("btnCancelarEdicaoProd").classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function limparFormProduto() {
@@ -295,18 +325,21 @@
             <td class="p-3 text-center font-bold text-blue-600">${ultimaConfValor !== null ? ultimaConfValor : "-"}</td>
             <td class="p-3 text-center font-bold text-gray-800 text-base">${estoqueAtual}</td>
             <td class="p-3 text-center">${statusBadge}</td>
-            <td class="p-3 text-center space-x-1">
+            <td class="no-print p-3 text-center space-x-1">
               <button onclick="editarProduto('${p.id}')" class="text-blue-600 hover:text-blue-800 text-xs font-bold border border-blue-200 px-2 py-1 rounded hover:bg-blue-50">✏️ Editar</button>
-              <button onclick="excluirProduto('${p.id}')" class="text-red-600 hover:text-red-800 text-xs font-bold border border-red-200 px-2 py-1 rounded hover:bg-blue-50">🗑️ Excluir</button>
+              <button onclick="excluirProduto('${p.id}')" class="text-red-600 hover:text-red-800 text-xs font-bold border border-red-200 px-2 py-1 rounded hover:bg-red-50">🗑️ Excluir</button>
             </td>
           </tr>
         `;
       });
     }
 
+    // --- LANÇAMENTOS & HISTÓRICO ---
+
     async function salvarLancamento(e) {
       e.preventDefault();
 
+      const lancId = document.getElementById("lancId").value;
       const idProduto = document.getElementById("selectProduto").value;
       const tipoMovimentacao = document.getElementById("selectTipo").value;
       const quantidade = Number(document.getElementById("inputQuantidade").value);
@@ -314,14 +347,17 @@
 
       if (!idProduto || !quantidade) return;
 
-      exibirStatus("Registrando lançamento...", "blue");
+      const acao = lancId ? "editarHistorico" : "salvar";
+      const id = lancId || "LANC_" + Date.now();
+
+      exibirStatus(lancId ? "Atualizando lançamento..." : "Registrando lançamento...", "blue");
 
       try {
         await fetch(URL_SCRIPT, {
           method: "POST",
           body: JSON.stringify({
-            acao: "salvar",
-            id: "LANC_" + Date.now(),
+            acao,
+            id,
             idProduto,
             tipoMovimentacao,
             quantidade,
@@ -329,11 +365,36 @@
           })
         });
 
-        document.getElementById("formLancamento").reset();
+        limparFormLancamento();
         await carregarDados();
       } catch (err) {
-        exibirStatus("Erro ao registrar lançamento.", "red");
+        exibirStatus("Erro ao salvar lançamento.", "red");
       }
+    }
+
+    function editarLancamento(id) {
+      const h = historicoGlobal.find(item => String(item.id) === String(id));
+      if (!h) return;
+
+      document.getElementById("lancId").value = h.id;
+      document.getElementById("selectProduto").value = h.idProduto;
+      document.getElementById("selectTipo").value = h.tipo;
+      document.getElementById("inputQuantidade").value = h.quantidade;
+      document.getElementById("inputObservacao").value = h.observacao;
+
+      document.getElementById("tituloFormLancamento").innerText = "✏️ Editar Lançamento";
+      document.getElementById("btnSalvarLanc").innerText = "💾 Salvar Alteração";
+      document.getElementById("btnCancelarEdicaoLanc").classList.remove("hidden");
+      
+      window.scrollTo({ top: 300, behavior: 'smooth' });
+    }
+
+    function limparFormLancamento() {
+      document.getElementById("formLancamento").reset();
+      document.getElementById("lancId").value = "";
+      document.getElementById("tituloFormLancamento").innerText = "📝 Novo Lançamento / Conferência";
+      document.getElementById("btnSalvarLanc").innerText = "💾 Registrar Lançamento";
+      document.getElementById("btnCancelarEdicaoLanc").classList.add("hidden");
     }
 
     function renderizarHistorico() {
@@ -357,7 +418,8 @@
             <td class="p-3"><span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs border">${h.tipo}</span></td>
             <td class="p-3 text-right font-bold">${h.quantidade}</td>
             <td class="p-3 text-gray-500 text-xs">${h.observacao || "-"}</td>
-            <td class="p-3 text-center">
+            <td class="no-print p-3 text-center space-x-1">
+              <button onclick="editarLancamento('${h.id}')" class="text-blue-600 hover:text-blue-800 text-xs font-bold border border-blue-200 px-2 py-1 rounded hover:bg-blue-50">✏️ Editar</button>
               <button onclick="excluirLancamento('${h.id}')" class="text-red-600 hover:text-red-800 text-xs font-bold border border-red-200 px-2 py-1 rounded hover:bg-red-50">🗑️ Excluir</button>
             </td>
           </tr>
@@ -380,6 +442,31 @@
       } catch (err) {
         exibirStatus("Erro ao excluir lançamento.", "red");
       }
+    }
+
+    function copiarResumoWhatsApp() {
+      let texto = `📊 *RELATÓRIO DE ESTOQUE - ${new Date().toLocaleDateString('pt-BR')}* 📊\n\n`;
+      
+      produtosGlobais.forEach(p => {
+        const movs = historicoGlobal
+          .filter(h => String(h.idProduto) === String(p.id))
+          .sort((a, b) => new Date(a.data) - new Date(b.data));
+
+        let estoqueAtual = p.estoqueInicial || 0;
+        let ultimaConfValor = "Sem contagem";
+
+        movs.forEach(m => {
+          const t = m.tipo;
+          if (["COMPRA", "ENTRADA", "MERCADORIA CD/BOX", "DEVOLUÇÃO"].includes(t)) estoqueAtual += Number(m.quantidade);
+          else if (["VENDAS", "SAÍDA", "QUEBRA/PERCA", "DOAÇÃO"].includes(t)) estoqueAtual -= Number(m.quantidade);
+          else if (t === "CONFERENCIA") { estoqueAtual = Number(m.quantidade); ultimaConfValor = Number(m.quantidade); }
+        });
+
+        texto += `• *${p.nome}* ➔ Estoque Atual: *${estoqueAtual}* (Conf: ${ultimaConfValor})\n`;
+      });
+
+      navigator.clipboard.writeText(texto);
+      alert("✅ Resumo do estoque copiado para a área de transferência! Cole no WhatsApp.");
     }
 
     function exibirStatus(mensagem, cor) {
